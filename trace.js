@@ -23,12 +23,12 @@ function exit(tid, retval) {
 }
 
 function getTid() {
-    var Thread = Java.use("java.lang.Thread")
+    var Thread = Java.use("java.lang.Thread");
     return Thread.currentThread().getId();
 }
 
 function getTName() {
-    var Thread = Java.use("java.lang.Thread")
+    var Thread = Java.use("java.lang.Thread");
     return Thread.currentThread().getName();
 }
 
@@ -54,11 +54,32 @@ function traceClass(clsname) {
                     var tid = getTid();
                     var tName = getTName();
                     for (var j = 0; j < arguments.length; j++) {
-                        args[j] = arguments[j] + ""
+                        var tmp = '';
+                        arguments[j] = arguments[j] + '';
+                        if (arguments[j].indexOf('[object Object]') != -1) {
+                            for (var i = 0; i < arguments[j].length; i++) {
+                                tmp += arguments[j][i] + ","
+                            }
+                            tmp = arguments[j] + '->' + tmp
+                        } else {
+                            tmp = arguments[j]
+                        }
+                        args[j] = tmp;
                     }
+
                     enter(tid, tName, clsname, methodName + proto, args);
                     var retval = this[methodName].apply(this, arguments);
-                    exit(tid, "" + retval);
+                    tmp = '';
+                    retval = retval + '';
+                    if (retval.indexOf('[object Object]') != -1) {
+                        for (var i = 0; i < retval.length; i++) {
+                            tmp += retval[i] + ","
+                        }
+                        exit(tid, "" + retval + '->' + tmp);
+                    } else {
+                        exit(tid, "" + retval);
+                    }
+
                     return retval;
                 }
             });

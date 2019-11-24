@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import base64
 import json
 import sys
 import threading
@@ -7,7 +6,6 @@ import time
 from copy import copy
 
 import frida
-
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
@@ -173,10 +171,7 @@ class TraceItem(QStandardItem):
         self.flush_text()
 
     def __str__(self):
-        # s = '{}.{}({})'.format(self.clazz, self.method, self.args)
-        s = '{}.{}'.format(self.clazz, self.method)
-        # if self.retval is not None: s += ' ---- {}'.format(self.retval)
-        return s
+        return '{}.{}'.format(self.clazz, self.method)
 
     def flush_text(self):
         self.setText(str(self))
@@ -264,22 +259,32 @@ def start_trace(app):
     def _on_child_added(child):
         _attach(child.pid)
 
-    device = frida.get_usb_device()
+    try:
+        device = frida.get_usb_device()
+    except Exception as e:
+        app.log(f'error {e}')
+        return
     match_s = str(app.match_regex_list).replace('u\'', '\'')
     black_s = str(app.black_regex_list).replace('u\'', '\'')
     device.on("child-added", _on_child_added)
-    application = device.get_frontmost_application()
-    target = 'Gadget' if application.identifier == 're.frida.Gadget' else application.identifier
-    for process in device.enumerate_processes():
-        if target in process.name:
-            _attach(process.name)
+    try:
+        application = device.get_frontmost_application()
+        target = 'Gadget' if application.identifier == 're.frida.Gadget' else application.identifier
+        for process in device.enumerate_processes():
+            if target in process.name:
+                _attach(process.name)
+    except Exception as e:
+        app.log(f'error {e}')
 
 
 def stop_trace(app):
     global scripts
     for s in copy(scripts):
-        s.unload()
-        app.log("trace script unload")
+        try:
+            s.unload()
+            app.log("trace script unload")
+        except Exception as e:
+            app.log(f"error {e}")
         scripts.remove(s)
 
 
@@ -304,7 +309,7 @@ class ZenTracerWindow(QMainWindow):
 
     def about_onClick(self):
         QMessageBox().about(self.app.window, "About",
-                            "\nZenTracer: Android Tracer based-on frida \nAuthor: github.com/hluwa")
+                            "\nZenTracer: Android Tracer based-on frida \nAuthor: github.com/hluwa\n修复Bug：ZhaoBoy字节数组显示问题；部分异常处理闪退问题")
 
     def import_jobf_onClick(self):
         jobfile = QFileDialog.getOpenFileName(self, 'import jadx job file', '', 'job file(*.jobf)')
