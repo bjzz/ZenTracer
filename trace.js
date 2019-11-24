@@ -55,8 +55,7 @@ function traceClass(clsname) {
                     var tName = getTName();
                     for (var j = 0; j < arguments.length; j++) {
                         var tmp = '';
-                        arguments[j] = arguments[j] + '';
-                        if (arguments[j].indexOf('[object Object]') != -1) {
+                        if (arguments[j] !== null && arguments[j] !== undefined && arguments[j].toString().indexOf('[object Object]') != -1) {
                             for (var i = 0; i < arguments[j].length; i++) {
                                 tmp += arguments[j][i] + ","
                             }
@@ -66,12 +65,10 @@ function traceClass(clsname) {
                         }
                         args[j] = tmp;
                     }
-
                     enter(tid, tName, clsname, methodName + proto, args);
                     var retval = this[methodName].apply(this, arguments);
                     tmp = '';
-                    retval = retval + '';
-                    if (retval.indexOf('[object Object]') != -1) {
+                    if (retval !== null && retval !== undefined && retval.toString().indexOf('[object Object]') != -1) {
                         for (var i = 0; i < retval.length; i++) {
                             tmp += retval[i] + ","
                         }
