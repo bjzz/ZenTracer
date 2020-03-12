@@ -23,17 +23,18 @@ function exit(tid, retval) {
 }
 
 function getTid() {
-    var Thread = Java.use("java.lang.Thread");
+    var Thread = Java.use("java.lang.Thread")
     return Thread.currentThread().getId();
 }
 
 function getTName() {
-    var Thread = Java.use("java.lang.Thread");
+    var Thread = Java.use("java.lang.Thread")
     return Thread.currentThread().getName();
 }
 
 function traceClass(clsname) {
     try {
+        var str = Java.use("java.lang.String");
         var target = Java.use(clsname);
         var methods = target.class.getDeclaredMethods();
         methods.forEach(function (method) {
@@ -54,12 +55,30 @@ function traceClass(clsname) {
                     var tid = getTid();
                     var tName = getTName();
                     for (var j = 0; j < arguments.length; j++) {
-                        args[j] = JSON.stringify(arguments[j])
+                        try {
+                            args[j] = str.$new(arguments[j]) + ""
+                        } catch (e) {
+                            try {
+                                args[j] = str.valueOf(arguments[j]) + ""
+                            } catch (e) {
+                                args[j] = arguments[j] + ""
+                            }
+                        }
                     }
                     enter(tid, tName, clsname, methodName + proto, args);
                     var retval = this[methodName].apply(this, arguments);
-                    exit(tid, "" + JSON.stringify(retval));
-                    return retval;
+                    var res = retval;
+                    try {
+                        retval = str.$new(retval) + ""
+                    } catch (e) {
+                        try {
+                            retval[j] = str.valueOf(retval) + ""
+                        } catch (e) {
+                            retval = retval
+                        }
+                    }
+                    exit(tid, retval);
+                    return res;
                 }
             });
         });
